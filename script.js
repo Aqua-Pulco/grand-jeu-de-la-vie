@@ -59,7 +59,7 @@ playerForm.addEventListener('submit', (e) => {
     // Vérification dans le localStorage
     const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
     if (playedPlayers.includes(playerFullName)) {
-        alert("Vous avez déjà joué. Vous ne pouvez pas rejouer.");
+        alert("Vous avez déjà joué. Vous ne pouvez pas rejouer. Ainsi va la Vie ;)");
         return;
     }
 
