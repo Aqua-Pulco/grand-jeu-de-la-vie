@@ -33,16 +33,15 @@ h1 {
 }
 
 #main-title {
-    font-size: 3rem; /* Taille plus grande pour l'effet */
+    font-size: 3rem;
     font-weight: bold;
     text-align: center;
     background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-    -webkit-background-clip: text; /* Applique le dégradé uniquement au texte (Chrome, Safari) */
-    background-clip: text; /* Version standard pour compatibilité avec d'autres navigateurs */
-    -webkit-text-fill-color: transparent; /* Rends le fond du texte transparent (Chrome, Safari) */
-    animation: rainbow 3s linear infinite; /* Animation dégradée */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow 3s linear infinite;
 }
-
 
 /* Animation pour l'effet arc-en-ciel */
 @keyframes rainbow {
@@ -58,32 +57,26 @@ h1 {
     gap: 10px;
 }
 
-/* Conteneur pour chaque groupe label + input */
 .form-group {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column; /* Passe les éléments en colonne par défaut */
     width: 100%;
-    gap: 10px;
     margin-bottom: 10px;
 }
 
-/* Labels des champs */
 label {
     font-size: 14px;
     font-weight: bold;
-    text-align: left;
-    flex: 1;
+    margin-bottom: 5px; /* Ajoute un espace entre le label et l'input */
 }
 
-/* Champs de texte */
 input[type="text"],
 input[type="password"] {
     padding: 8px;
-    width: 200px;
     font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    width: 100%; /* Largeur maximale pour s'adapter au mobile */
 }
 
 /* Bouton général */
@@ -138,7 +131,7 @@ button:hover {
         transform: rotate(0deg);
     }
     to {
-        transform: rotate(3600deg); /* 10 tours complets */
+        transform: rotate(3600deg);
     }
 }
 
@@ -228,7 +221,12 @@ button:hover {
         width: 100%;
     }
 
-    button {
-        width: 100%;
+    .form-group {
+        flex-direction: column; /* Pour que les labels et inputs soient bien alignés */
+        align-items: flex-start;
+    }
+
+    label {
+        margin-bottom: 5px;
     }
 }

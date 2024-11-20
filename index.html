@@ -49,8 +49,10 @@
         <div id="admin-form" style="display: none;">
             <h2>Connexion Administrateur</h2>
             <form id="adminForm">
-                <label for="adminPassword">Mot de passe :</label>
-                <input type="password" id="adminPassword" placeholder="Mot de passe" required>
+                <div class="form-group">
+                    <label for="adminPassword">Mot de passe :</label>
+                    <input type="password" id="adminPassword" placeholder="Mot de passe" required>
+                </div>
                 <button type="submit">Connexion</button>
             </form>
         </div>
@@ -60,8 +62,10 @@
             <h2>Interface Administrateur</h2>
             <ul id="resultats-list"></ul>
             <!-- Champ pour entrer le nom complet du joueur à réinitialiser -->
-            <label for="playerToReset">Nom complet du joueur :</label>
-            <input type="text" id="playerToReset" placeholder="Nom complet du joueur">
+            <div class="form-group">
+                <label for="playerToReset">Nom complet du joueur :</label>
+                <input type="text" id="playerToReset" placeholder="Nom complet du joueur">
+            </div>
             <button id="reset-player-btn">Réinitialiser ce joueur</button>
             <button id="reset-all-btn">Réinitialiser tous les joueurs</button>
         </div>
