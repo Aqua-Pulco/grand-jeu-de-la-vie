@@ -25,7 +25,15 @@ const resultExtraText = document.getElementById('result-extra-text');
 let allResults = [];
 let playersPlayed = [];
 let tirages = {};
-let currentRound = 1; // Compteur pour les rounds
+let currentRound = 1;
+
+// --- Fonction pour normaliser les noms ---
+function normalizeName(name) {
+    return name
+        .toLowerCase() // Convertir tout en minuscules
+        .replace(/[^a-z0-9]/g, '') // Supprimer tout sauf les lettres et chiffres
+        .trim(); // Supprimer les espaces autour
+}
 
 // --- Initialisation des tirages pour chaque catégorie ---
 Object.keys(riche).forEach((key) => {
@@ -46,13 +54,20 @@ playerForm.addEventListener('submit', (e) => {
         return;
     }
 
-    const playerFullName = `${firstName} ${lastName}`;
-    if (playersPlayed.includes(playerFullName)) {
+    const playerFullName = normalizeName(`${firstName} ${lastName}`);
+
+    // Vérification dans le localStorage
+    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
+    if (playedPlayers.includes(playerFullName)) {
         alert("Vous avez déjà joué. Vous ne pouvez pas rejouer.");
         return;
     }
 
-    playersPlayed.push(playerFullName);
+    // Ajouter au localStorage
+    playedPlayers.push(playerFullName);
+    localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
+
+    playersPlayed.push(playerFullName); // Ajouter à la session actuelle
     sessionStorage.setItem('playerName', playerFullName);
     playerForm.style.display = 'none';
     wheelSection.style.display = 'block';
@@ -66,9 +81,8 @@ function getAvailableCategory(group) {
 
     if (availableCategories.length === 0) {
         if (currentRound < 3) {
-            // Passer au round suivant
             currentRound++;
-            return getAvailableCategory(group); // Relancer la recherche dans le nouveau round
+            return getAvailableCategory(group);
         } else {
             alert(`Toutes les catégories ${group === riche ? "riches" : "pauvres"} ont atteint le tirage maximum.`);
             return null;
@@ -183,14 +197,22 @@ function displayResults() {
 // --- Bouton pour réinitialiser un joueur spécifique ---
 resetPlayerBtn.addEventListener('click', () => {
     const playerToReset = playerToResetInput.value.trim();
+
     if (!playerToReset) {
         alert("Veuillez entrer le nom complet du joueur.");
         return;
     }
 
-    const playerIndex = playersPlayed.indexOf(playerToReset);
+    const normalizedPlayerToReset = normalizeName(playerToReset);
+
+    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
+    const playerIndex = playedPlayers.indexOf(normalizedPlayerToReset);
+
     if (playerIndex !== -1) {
-        playersPlayed.splice(playerIndex, 1);
+        playedPlayers.splice(playerIndex, 1);
+        localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
+
+        playersPlayed.splice(playersPlayed.indexOf(normalizedPlayerToReset), 1);
         alert(`${playerToReset} peut rejouer.`);
     } else {
         alert("Ce joueur n'existe pas ou n'a pas encore joué.");
@@ -202,7 +224,8 @@ resetAllBtn.addEventListener('click', () => {
     allResults = [];
     playersPlayed = [];
     Object.keys(tirages).forEach((key) => (tirages[key] = 0));
-    currentRound = 1; // Réinitialise les rounds
+    currentRound = 1;
+    localStorage.removeItem('playedPlayers');
     alert('Toutes les données ont été réinitialisées.');
     displayResults();
 });
