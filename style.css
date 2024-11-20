@@ -1,0 +1,234 @@
+/* --- Corps de la page --- */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('https://apod.cidehom.com/pix/2004/040707.jpg') no-repeat center center fixed; /* Image de fond */
+    background-size: cover; /* L'image couvre tout l'écran */
+    color: #fff; /* Texte blanc pour contraste */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* --- Conteneur principal --- */
+#main-container {
+    width: 80%;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.8); /* Fond noir semi-transparent */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Effet d'ombre pour le conteneur */
+    border-radius: 10px; /* Coins arrondis */
+}
+
+/* --- Titre principal --- */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #fdd835; /* Couleur dorée pour un effet étoilé */
+}
+
+#main-title {
+    font-size: 3rem; /* Taille plus grande pour l'effet */
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+    -webkit-background-clip: text; /* Applique le dégradé uniquement au texte (Chrome, Safari) */
+    background-clip: text; /* Version standard pour compatibilité avec d'autres navigateurs */
+    -webkit-text-fill-color: transparent; /* Rends le fond du texte transparent (Chrome, Safari) */
+    animation: rainbow 3s linear infinite; /* Animation dégradée */
+}
+
+
+/* Animation pour l'effet arc-en-ciel */
+@keyframes rainbow {
+    0% { background-position: 0%; }
+    100% { background-position: 100%; }
+}
+
+/* --- Formulaire joueur --- */
+#player-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Conteneur pour chaque groupe label + input */
+.form-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Labels des champs */
+label {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    flex: 1;
+}
+
+/* Champs de texte */
+input[type="text"],
+input[type="password"] {
+    padding: 8px;
+    width: 200px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Bouton général */
+button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* --- Roue de la fortune --- */
+#wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#wheel {
+    width: 300px;
+    height: 300px;
+    border: 10px solid #007BFF;
+    border-radius: 50%;
+    margin: 20px auto;
+    background: conic-gradient(
+        #ff5733 0deg 45deg,
+        #33ff57 45deg 90deg,
+        #3357ff 90deg 135deg,
+        #f0ff33 135deg 180deg,
+        #ff33c4 180deg 225deg,
+        #33fff0 225deg 270deg,
+        #d633ff 270deg 315deg,
+        #ff8433 315deg 360deg
+    );
+    transition: transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+/* Animation de rotation */
+.spin {
+    animation: spin 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(3600deg); /* 10 tours complets */
+    }
+}
+
+/* --- Section résultats --- */
+#result-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+#result-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #04e072;
+    text-align: center;
+    margin-top: 10px;
+}
+
+#result-extra-text {
+    font-size: 16px;
+    color: #ddd;
+    margin: 10px 0;
+    font-style: italic;
+    white-space: pre-line;
+}
+
+#result-category {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    margin-top: 10px;
+    white-space: pre-line;
+}
+
+/* Image associée au résultat */
+#result-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* --- Section admin --- */
+#admin-link {
+    text-decoration: none;
+    color: #fff;
+    margin-top: 20px;
+    font-size: 12px;
+}
+
+#admin-link:hover {
+    color: #007BFF;
+}
+
+#admin-interface {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#resultats-list {
+    list-style-type: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    text-align: left;
+    white-space: pre-line;
+}
+
+#resultats-list li {
+    padding: 5px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* --- Mobile responsiveness --- */
+@media (max-width: 768px) {
+    #main-container {
+        width: 95%;
+        padding: 10px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+}

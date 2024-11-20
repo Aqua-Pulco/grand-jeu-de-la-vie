@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Grand Jeu de la Vie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="main-container" class="container">
+        <!-- Titre principal -->
+        <h1 id="main-title">Bienvenue au Grand Jeu de la Vie</h1>
+
+        <div id="player-form">
+            <form id="playerForm">
+                <div class="form-group">
+                    <label for="playerFirstName">Prénom :</label>
+                    <input type="text" id="playerFirstName" placeholder="Prénom" required>
+                </div>
+                <div class="form-group">
+                    <label for="playerLastName">Nom :</label>
+                    <input type="text" id="playerLastName" placeholder="Nom" required>
+                </div>
+                <button type="submit">Commencer</button>
+            </form>
+        </div>
+      
+        <!-- Roue de la fortune -->
+        <div id="wheel-section" style="display: none;">
+            <h2>Tourne la roue !</h2>
+            <div id="wheel"></div>
+            <button id="spin-btn">Tourner la Roue</button>
+        </div>
+
+        <!-- Résultats joueur -->
+        <div id="result-section" style="display: none;">
+            <h2 id="result-title"></h2>
+            <p id="result-extra-text"></p> <!-- Nouvel élément pour le texte -->
+            <p id="result-category"></p>
+            <p id="result-action"></p>
+            <img id="result-image" src="" alt="Illustration pour le résultat" style="display: none;">
+            <button id="reset-btn">Revenir à l'accueil</button>
+        </div>
+
+        <!-- Lien discret pour accéder à la section admin -->
+        <a href="#" id="admin-link" style="font-size: small;">Admin</a>
+
+        <!-- Formulaire admin -->
+        <div id="admin-form" style="display: none;">
+            <h2>Connexion Administrateur</h2>
+            <form id="adminForm">
+                <label for="adminPassword">Mot de passe :</label>
+                <input type="password" id="adminPassword" placeholder="Mot de passe" required>
+                <button type="submit">Connexion</button>
+            </form>
+        </div>
+
+        <!-- Interface admin -->
+        <div id="admin-interface" style="display: none;">
+            <h2>Interface Administrateur</h2>
+            <ul id="resultats-list"></ul>
+            <!-- Champ pour entrer le nom complet du joueur à réinitialiser -->
+            <label for="playerToReset">Nom complet du joueur :</label>
+            <input type="text" id="playerToReset" placeholder="Nom complet du joueur">
+            <button id="reset-player-btn">Réinitialiser ce joueur</button>
+            <button id="reset-all-btn">Réinitialiser tous les joueurs</button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
