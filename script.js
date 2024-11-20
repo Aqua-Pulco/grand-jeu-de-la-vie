@@ -1,4 +1,21 @@
 import { riche, pauvre } from './data.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+// --- Configuration Firebase ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDm6MO9b1ZVAK8k7kaacl9ABYS-9wmLoLA",
+    authDomain: "grand-jeu-de-la-vie.firebaseapp.com",
+    databaseURL: "https://grand-jeu-de-la-vie-default-rtdb.firebaseio.com",
+    projectId: "grand-jeu-de-la-vie",
+    storageBucket: "grand-jeu-de-la-vie.firebasestorage.app",
+    messagingSenderId: "210747258489",
+    appId: "1:210747258489:web:c3a914e5bddf82a25346a8"
+};
+
+// --- Initialiser Firebase ---
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 // --- Sélection des éléments DOM ---
 const playerForm = document.getElementById('playerForm');
@@ -23,16 +40,15 @@ const resultExtraText = document.getElementById('result-extra-text');
 
 // --- Variables globales ---
 let allResults = [];
-let playersPlayed = [];
 let tirages = {};
 let currentRound = 1;
 
 // --- Fonction pour normaliser les noms ---
 function normalizeName(name) {
     return name
-        .toLowerCase() // Convertir tout en minuscules
-        .replace(/[^a-z0-9]/g, '') // Supprimer tout sauf les lettres et chiffres
-        .trim(); // Supprimer les espaces autour
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
 }
 
 // --- Initialisation des tirages pour chaque catégorie ---
@@ -42,6 +58,36 @@ Object.keys(riche).forEach((key) => {
 Object.keys(pauvre).forEach((key) => {
     tirages[key] = 0;
 });
+
+// --- Ajouter un joueur dans la base Firebase ---
+function addPlayerToFirebase(playerFullName) {
+    const playersRef = ref(database, 'players');
+    const playerData = {
+        name: playerFullName,
+        timestamp: new Date().toISOString(),
+    };
+    push(playersRef, playerData);
+}
+
+// --- Ajouter un résultat dans la base Firebase ---
+function addResultToFirebase(result) {
+    const resultsRef = ref(database, 'results');
+    push(resultsRef, result);
+}
+
+// --- Mettre à jour les résultats dans l'interface admin ---
+function updateAdminResults() {
+    const resultsRef = ref(database, 'results');
+    onValue(resultsRef, (snapshot) => {
+        resultsList.innerHTML = '';
+        snapshot.forEach((childSnapshot) => {
+            const result = childSnapshot.val();
+            const listItem = document.createElement('li');
+            listItem.textContent = `Joueur: ${result.player} - ${result.type} - ${result.category}`;
+            resultsList.appendChild(listItem);
+        });
+    });
+}
 
 // --- Formulaire joueur ---
 playerForm.addEventListener('submit', (e) => {
@@ -56,27 +102,27 @@ playerForm.addEventListener('submit', (e) => {
 
     const playerFullName = normalizeName(`${firstName} ${lastName}`);
 
-    // Vérification dans le localStorage
-    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
-    if (playedPlayers.includes(playerFullName)) {
-        alert("Vous ne pouvez pas rejouer. Ainsi va la Vie ;)");
-        return;
-    }
+    // Vérification dans Firebase
+    const playersRef = ref(database, 'players');
+    onValue(playersRef, (snapshot) => {
+        const players = snapshot.val() || {};
+        const alreadyPlayed = Object.values(players).some((player) => player.name === playerFullName);
 
-    // Ajouter au localStorage
-    playedPlayers.push(playerFullName);
-    localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
-
-    playersPlayed.push(playerFullName); // Ajouter à la session actuelle
-    sessionStorage.setItem('playerName', playerFullName);
-    playerForm.style.display = 'none';
-    wheelSection.style.display = 'block';
+        if (alreadyPlayed) {
+            alert("Vous avez déjà joué, vous ne pouvez pas rejouer, ainsi va la Vie ;)");
+        } else {
+            addPlayerToFirebase(playerFullName);
+            sessionStorage.setItem('playerName', playerFullName);
+            playerForm.style.display = 'none';
+            wheelSection.style.display = 'block';
+        }
+    }, { onlyOnce: true });
 });
 
 // --- Fonction pour tirer une catégorie aléatoire ---
 function getAvailableCategory(group) {
     const availableCategories = Object.keys(group).filter(
-        (key) => tirages[key] < currentRound // Filtrer par le round actuel
+        (key) => tirages[key] < currentRound
     );
 
     if (availableCategories.length === 0) {
@@ -109,12 +155,14 @@ spinBtn.addEventListener('click', () => {
     tirages[chosenCategory]++;
     const chosenData = group[chosenCategory];
 
-    allResults.push({
+    const result = {
         player: playerName,
         type: isRiche ? "riche" : "pauvre",
         category: chosenCategory,
         action: chosenData.action[0],
-    });
+    };
+
+    addResultToFirebase(result);
 
     // --- Animation de la roue ---
     const rotationAmount = 3600 + Math.floor(Math.random() * 360);
@@ -152,80 +200,5 @@ function displayResult(isRiche, category, data) {
     }
 }
 
-// --- Bouton pour revenir à l'accueil ---
-resetBtn.addEventListener('click', () => {
-    const mainTitle = document.getElementById('main-title');
-    if (mainTitle) {
-        mainTitle.textContent = 'Bienvenue au Grand Jeu de la Vie';
-    }
-
-    resultSection.style.display = 'none';
-    playerForm.style.display = 'block';
-    sessionStorage.clear();
-});
-
-// --- Lien pour accéder à la section admin ---
-adminLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    adminForm.style.display = 'block';
-});
-
-// --- Formulaire de connexion admin ---
-adminForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const password = document.getElementById('adminPassword').value.trim();
-
-    if (password === 'Brandebourg49') {
-        adminForm.style.display = 'none';
-        adminInterface.style.display = 'block';
-        displayResults();
-    } else {
-        alert('Mot de passe incorrect. Veuillez réessayer.');
-    }
-});
-
-// --- Fonction pour afficher les résultats dans l'interface admin ---
-function displayResults() {
-    resultsList.innerHTML = '';
-    allResults.forEach((result, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `Tirage ${index + 1}: ${result.player} - ${result.type} - ${result.category}`;
-        resultsList.appendChild(listItem);
-    });
-}
-
-// --- Bouton pour réinitialiser un joueur spécifique ---
-resetPlayerBtn.addEventListener('click', () => {
-    const playerToReset = playerToResetInput.value.trim();
-
-    if (!playerToReset) {
-        alert("Veuillez entrer le nom complet du joueur.");
-        return;
-    }
-
-    const normalizedPlayerToReset = normalizeName(playerToReset);
-
-    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
-    const playerIndex = playedPlayers.indexOf(normalizedPlayerToReset);
-
-    if (playerIndex !== -1) {
-        playedPlayers.splice(playerIndex, 1);
-        localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
-
-        playersPlayed.splice(playersPlayed.indexOf(normalizedPlayerToReset), 1);
-        alert(`${playerToReset} peut rejouer.`);
-    } else {
-        alert("Ce joueur n'existe pas ou n'a pas encore joué.");
-    }
-});
-
-// --- Bouton pour réinitialiser tous les joueurs ---
-resetAllBtn.addEventListener('click', () => {
-    allResults = [];
-    playersPlayed = [];
-    Object.keys(tirages).forEach((key) => (tirages[key] = 0));
-    currentRound = 1;
-    localStorage.removeItem('playedPlayers');
-    alert('Toutes les données ont été réinitialisées.');
-    displayResults();
-});
+// --- Initialisation de l'interface admin ---
+updateAdminResults();
