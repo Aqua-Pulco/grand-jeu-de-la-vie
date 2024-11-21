@@ -36,21 +36,14 @@ const resetAllBtn = document.getElementById('reset-all-btn');
 const resultsList = document.getElementById('resultats-list');
 
 // --- Variables globales ---
-let tirages = {};
+let tirages = { ...riche, ...pauvre }; // Compteur pour chaque catégorie
 let currentRound = 1;
+let tiragesDispo = { riche: Object.keys(riche), pauvre: Object.keys(pauvre) }; // Catégories disponibles
 
 // --- Fonction pour normaliser les noms ---
 function normalizeName(name) {
     return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
-
-// --- Initialisation des tirages pour chaque catégorie ---
-Object.keys(riche).forEach((key) => {
-    tirages[key] = 0;
-});
-Object.keys(pauvre).forEach((key) => {
-    tirages[key] = 0;
-});
 
 // --- Formulaire joueur ---
 playerForm.addEventListener('submit', (e) => {
@@ -80,6 +73,21 @@ playerForm.addEventListener('submit', (e) => {
     }, { onlyOnce: true });
 });
 
+// --- Fonction pour tirer une catégorie aléatoire unique ---
+function getUniqueCategory(group, type) {
+    if (tiragesDispo[type].length === 0) {
+        tiragesDispo[type] = Object.keys(group);
+        currentRound++;
+    }
+
+    const randomIndex = Math.floor(Math.random() * tiragesDispo[type].length);
+    const chosenCategory = tiragesDispo[type][randomIndex];
+
+    tiragesDispo[type].splice(randomIndex, 1); // Retirer la catégorie tirée pour garantir unicité
+
+    return chosenCategory;
+}
+
 // --- Fonction pour afficher les résultats après le tirage ---
 function displayResult(isRiche, category, data) {
     wheelSection.style.display = 'none';
@@ -87,7 +95,7 @@ function displayResult(isRiche, category, data) {
 
     resultTitle.textContent = isRiche ? 'Tu es Riche' : "Tu es Pauvre";
     resultCategory.textContent = category;
-    resultAction.textContent = `Mission : ${data.action[0]}`;
+    resultAction.innerHTML = `Mission : ${data.action[0].replace(/\n/g, '<br>')}`; // Gérer les retours à la ligne
 }
 
 // --- Fonction pour tourner la roue ---
@@ -99,7 +107,7 @@ spinBtn.addEventListener('click', () => {
 
     const isRiche = Math.random() > 0.5;
     const group = isRiche ? riche : pauvre;
-    const chosenCategory = Object.keys(group)[Math.floor(Math.random() * Object.keys(group).length)];
+    const chosenCategory = getUniqueCategory(group, isRiche ? "riche" : "pauvre");
     const chosenData = group[chosenCategory];
 
     const playerResult = {
