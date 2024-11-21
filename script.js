@@ -1,3 +1,22 @@
+// Import Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDm6MO9b1ZVAK8k7kaacl9ABYS-9wmLoLA",
+    authDomain: "grand-jeu-de-la-vie.firebaseapp.com",
+    projectId: "grand-jeu-de-la-vie",
+    storageBucket: "grand-jeu-de-la-vie.appspot.com",
+    messagingSenderId: "210747258489",
+    appId: "1:210747258489:web:c3a914e5bddf82a25346a8",
+    databaseURL: "https://grand-jeu-de-la-vie-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+// Initialize Firebase and Realtime Database
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
 import { riche, pauvre } from './data.js';
 
 // --- Sélection des éléments DOM ---
@@ -10,29 +29,19 @@ const resultSection = document.getElementById('result-section');
 const resultTitle = document.getElementById('result-title');
 const resultCategory = document.getElementById('result-category');
 const resultAction = document.getElementById('result-action');
-const resultImage = document.getElementById('result-image');
 const resetBtn = document.getElementById('reset-btn');
 const adminLink = document.getElementById('admin-link');
-const adminForm = document.getElementById('admin-form');
 const adminInterface = document.getElementById('admin-interface');
-const resetPlayerBtn = document.getElementById('reset-player-btn');
-const playerToResetInput = document.getElementById('playerToReset');
 const resetAllBtn = document.getElementById('reset-all-btn');
 const resultsList = document.getElementById('resultats-list');
-const resultExtraText = document.getElementById('result-extra-text');
 
 // --- Variables globales ---
-let allResults = [];
-let playersPlayed = [];
 let tirages = {};
 let currentRound = 1;
 
 // --- Fonction pour normaliser les noms ---
 function normalizeName(name) {
-    return name
-        .toLowerCase() // Convertir tout en minuscules
-        .replace(/[^a-z0-9]/g, '') // Supprimer tout sauf les lettres et chiffres
-        .trim(); // Supprimer les espaces autour
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
 
 // --- Initialisation des tirages pour chaque catégorie ---
@@ -56,44 +65,32 @@ playerForm.addEventListener('submit', (e) => {
 
     const playerFullName = normalizeName(`${firstName} ${lastName}`);
 
-    // Vérification dans le localStorage
-    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
-    if (playedPlayers.includes(playerFullName)) {
-        alert("Vous ne pouvez pas rejouer. Ainsi va la Vie ;)");
-        return;
-    }
-
-    // Ajouter au localStorage
-    playedPlayers.push(playerFullName);
-    localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
-
-    playersPlayed.push(playerFullName); // Ajouter à la session actuelle
-    sessionStorage.setItem('playerName', playerFullName);
-    playerForm.style.display = 'none';
-    wheelSection.style.display = 'block';
+    // Vérifier si le joueur est déjà enregistré dans la base de données
+    const playerRef = ref(database, `players/${playerFullName}`);
+    onValue(playerRef, (snapshot) => {
+        if (snapshot.exists()) {
+            alert("Vous avez déjà joué. Ainsi va la Vie ;)");
+        } else {
+            const timestamp = new Date().toISOString();
+            set(playerRef, { played: true, timestamp });
+            sessionStorage.setItem('playerName', playerFullName);
+            playerForm.style.display = 'none';
+            wheelSection.style.display = 'block';
+        }
+    }, { onlyOnce: true });
 });
 
-// --- Fonction pour tirer une catégorie aléatoire ---
-function getAvailableCategory(group) {
-    const availableCategories = Object.keys(group).filter(
-        (key) => tirages[key] < currentRound // Filtrer par le round actuel
-    );
+// --- Fonction pour afficher les résultats après le tirage ---
+function displayResult(isRiche, category, data) {
+    wheelSection.style.display = 'none';
+    resultSection.style.display = 'block';
 
-    if (availableCategories.length === 0) {
-        if (currentRound < 3) {
-            currentRound++;
-            return getAvailableCategory(group);
-        } else {
-            alert(`Toutes les catégories ${group === riche ? "riches" : "pauvres"} ont atteint le tirage maximum.`);
-            return null;
-        }
-    }
-
-    const randomIndex = Math.floor(Math.random() * availableCategories.length);
-    return availableCategories[randomIndex];
+    resultTitle.textContent = isRiche ? 'Tu es Riche' : "Tu es Pauvre";
+    resultCategory.textContent = category;
+    resultAction.textContent = `Mission : ${data.action[0]}`;
 }
 
-// --- Fonction pour faire tourner la roue ---
+// --- Fonction pour tourner la roue ---
 spinBtn.addEventListener('click', () => {
     if (isSpinning) return;
 
@@ -102,130 +99,58 @@ spinBtn.addEventListener('click', () => {
 
     const isRiche = Math.random() > 0.5;
     const group = isRiche ? riche : pauvre;
-    const chosenCategory = getAvailableCategory(group);
-
-    if (!chosenCategory) return;
-
-    tirages[chosenCategory]++;
+    const chosenCategory = Object.keys(group)[Math.floor(Math.random() * Object.keys(group).length)];
     const chosenData = group[chosenCategory];
 
-    allResults.push({
+    const playerResult = {
         player: playerName,
         type: isRiche ? "riche" : "pauvre",
         category: chosenCategory,
         action: chosenData.action[0],
-    });
+        timestamp: new Date().toISOString()
+    };
 
-    // --- Animation de la roue ---
+    // Sauvegarder les résultats
+    const resultKey = push(ref(database, `results`)).key;
+    set(ref(database, `results/${resultKey}`), playerResult);
+
+    // Animation
     const rotationAmount = 3600 + Math.floor(Math.random() * 360);
-    wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)';
+    wheel.style.transition = 'transform 4s';
     wheel.style.transform = `rotate(${rotationAmount}deg)`;
     isSpinning = true;
 
     setTimeout(() => {
         isSpinning = false;
-        wheel.style.transition = 'none';
         wheel.style.transform = `rotate(${rotationAmount % 360}deg)`;
         displayResult(isRiche, chosenCategory, chosenData);
     }, 4000);
 });
 
-// --- Fonction pour afficher le résultat ---
-function displayResult(isRiche, category, data) {
-    wheelSection.style.display = 'none';
-    resultSection.style.display = 'block';
-
-    const mainTitle = document.getElementById('main-title');
-    if (mainTitle) {
-        mainTitle.textContent = isRiche ? 'Tu es Riche' : "Tu es Pauvre";
-    }
-
-    resultTitle.textContent = 'Et...';
-    resultCategory.textContent = `${category}`;
-    resultAction.innerHTML = `Ta mission, si tu l'acceptes :<br>${data.action[0].replace(/\n/g, '<br>')}`;
-
-    if (data.image) {
-        resultImage.src = data.image;
-        resultImage.style.display = 'block';
-    } else {
-        resultImage.style.display = 'none';
-    }
-}
-
-// --- Bouton pour revenir à l'accueil ---
-resetBtn.addEventListener('click', () => {
-    const mainTitle = document.getElementById('main-title');
-    if (mainTitle) {
-        mainTitle.textContent = 'Bienvenue au Grand Jeu de la Vie';
-    }
-
-    resultSection.style.display = 'none';
-    playerForm.style.display = 'block';
-    sessionStorage.clear();
-});
-
-// --- Lien pour accéder à la section admin ---
+// --- Interface admin : Afficher les résultats ---
 adminLink.addEventListener('click', (e) => {
     e.preventDefault();
-    adminForm.style.display = 'block';
-});
-
-// --- Formulaire de connexion admin ---
-adminForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const password = document.getElementById('adminPassword').value.trim();
-
-    if (password === 'Brandebourg49') {
-        adminForm.style.display = 'none';
-        adminInterface.style.display = 'block';
-        displayResults();
-    } else {
-        alert('Mot de passe incorrect. Veuillez réessayer.');
-    }
-});
-
-// --- Fonction pour afficher les résultats dans l'interface admin ---
-function displayResults() {
-    resultsList.innerHTML = '';
-    allResults.forEach((result, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `Tirage ${index + 1}: ${result.player} - ${result.type} - ${result.category}`;
-        resultsList.appendChild(listItem);
+    adminInterface.style.display = 'block';
+    onValue(ref(database, 'results'), (snapshot) => {
+        resultsList.innerHTML = '';
+        snapshot.forEach((childSnapshot) => {
+            const result = childSnapshot.val();
+            const listItem = document.createElement('li');
+            listItem.textContent = `${result.player} - ${result.type} - ${result.category} (tiré le ${new Date(result.timestamp).toLocaleString()})`;
+            resultsList.appendChild(listItem);
+        });
     });
-}
-
-// --- Bouton pour réinitialiser un joueur spécifique ---
-resetPlayerBtn.addEventListener('click', () => {
-    const playerToReset = playerToResetInput.value.trim();
-
-    if (!playerToReset) {
-        alert("Veuillez entrer le nom complet du joueur.");
-        return;
-    }
-
-    const normalizedPlayerToReset = normalizeName(playerToReset);
-
-    const playedPlayers = JSON.parse(localStorage.getItem('playedPlayers')) || [];
-    const playerIndex = playedPlayers.indexOf(normalizedPlayerToReset);
-
-    if (playerIndex !== -1) {
-        playedPlayers.splice(playerIndex, 1);
-        localStorage.setItem('playedPlayers', JSON.stringify(playedPlayers));
-
-        playersPlayed.splice(playersPlayed.indexOf(normalizedPlayerToReset), 1);
-        alert(`${playerToReset} peut rejouer.`);
-    } else {
-        alert("Ce joueur n'existe pas ou n'a pas encore joué.");
-    }
 });
 
-// --- Bouton pour réinitialiser tous les joueurs ---
+// --- Réinitialiser toutes les données ---
 resetAllBtn.addEventListener('click', () => {
-    allResults = [];
-    playersPlayed = [];
-    Object.keys(tirages).forEach((key) => (tirages[key] = 0));
-    currentRound = 1;
-    localStorage.removeItem('playedPlayers');
+    remove(ref(database, 'players'));
+    remove(ref(database, 'results'));
     alert('Toutes les données ont été réinitialisées.');
-    displayResults();
+});
+
+// --- Revenir à l'accueil ---
+resetBtn.addEventListener('click', () => {
+    resultSection.style.display = 'none';
+    playerForm.style.display = 'block';
 });
