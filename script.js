@@ -1,6 +1,6 @@
-// Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { riche, pauvre } from "./data.js";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -13,52 +13,71 @@ const firebaseConfig = {
     databaseURL: "https://grand-jeu-de-la-vie-default-rtdb.europe-west1.firebasedatabase.app/"
 };
 
-// Initialize Firebase and Realtime Database
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-import { riche, pauvre } from './data.js';
+// DOM Elements
+const playerForm = document.getElementById("playerForm");
+const wheelSection = document.getElementById("wheel-section");
+const wheel = document.getElementById("wheel");
+const spinBtn = document.getElementById("spin-btn");
+const resultSection = document.getElementById("result-section");
+const resultTitle = document.getElementById("result-title");
+const resultCategory = document.getElementById("result-category");
+const resultAction = document.getElementById("result-action");
+const resetBtn = document.getElementById("reset-btn");
+const adminLink = document.getElementById("admin-link");
+const adminForm = document.getElementById("admin-form");
+const adminPasswordInput = document.getElementById("adminPassword");
+const adminSubmitBtn = document.getElementById("admin-submit");
+const adminInterface = document.getElementById("admin-interface");
+const resetAllBtn = document.getElementById("reset-all-btn");
+const resultsList = document.getElementById("resultats-list");
+const resetPlayerBtn = document.getElementById("reset-player-btn");
+const resetPlayerNameInput = document.getElementById("resetPlayerName");
 
-// --- Sélection des éléments DOM ---
-const playerForm = document.getElementById('playerForm');
-const wheelSection = document.getElementById('wheel-section');
-const wheel = document.getElementById('wheel');
-let isSpinning = false;
-const spinBtn = document.getElementById('spin-btn');
-const resultSection = document.getElementById('result-section');
-const resultTitle = document.getElementById('result-title');
-const resultCategory = document.getElementById('result-category');
-const resultAction = document.getElementById('result-action');
-const resetBtn = document.getElementById('reset-btn');
-const adminLink = document.getElementById('admin-link');
-const adminInterface = document.getElementById('admin-interface');
-const resetAllBtn = document.getElementById('reset-all-btn');
-const resultsList = document.getElementById('resultats-list');
+// Globals
+let tiragesDispo = { riche: [], pauvre: [] };
+let tirageCount = { riche: {}, pauvre: {} };
+const ADMIN_PASSWORD = "Brandebourg49";
 
-// --- Variables globales ---
-let tirages = { ...riche, ...pauvre }; // Compteur pour chaque catégorie
-let currentRound = 1;
-let tiragesDispo = { riche: Object.keys(riche), pauvre: Object.keys(pauvre) }; // Catégories disponibles
+// Initialize tirageCount with maximum values
+Object.keys(riche).forEach(category => {
+    tirageCount.riche[category] = 0;
+});
+Object.keys(pauvre).forEach(category => {
+    tirageCount.pauvre[category] = 0;
+});
 
-// --- Fonction pour normaliser les noms ---
-function normalizeName(name) {
-    return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+// Reset tiragesDispo for a new cycle
+function resetTirages(type) {
+    tiragesDispo[type] = Object.keys(type === "riche" ? riche : pauvre).filter(category => {
+        return tirageCount[type][category] < (type === "riche" ? riche : pauvre)[category].tirage_max;
+    });
 }
 
-// --- Formulaire joueur ---
-playerForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const firstName = document.getElementById('playerFirstName').value.trim();
-    const lastName = document.getElementById('playerLastName').value.trim();
+// Verify Password
+function isPasswordCorrect(inputPassword) {
+    return inputPassword === ADMIN_PASSWORD;
+}
 
+// Normalize Names
+function normalizeName(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+}
+
+// Player Form Submission
+playerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const firstName = document.getElementById("playerFirstName").value.trim();
+    const lastName = document.getElementById("playerLastName").value.trim();
     if (!firstName || !lastName) {
         alert("Veuillez remplir tous les champs.");
         return;
     }
 
     const playerFullName = normalizeName(`${firstName} ${lastName}`);
-
-    // Vérifier si le joueur est déjà enregistré dans la base de données
     const playerRef = ref(database, `players/${playerFullName}`);
     onValue(playerRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -66,99 +85,138 @@ playerForm.addEventListener('submit', (e) => {
         } else {
             const timestamp = new Date().toISOString();
             set(playerRef, { played: true, timestamp });
-            sessionStorage.setItem('playerName', playerFullName);
-            playerForm.style.display = 'none';
-            wheelSection.style.display = 'block';
+            sessionStorage.setItem("playerName", playerFullName);
+            playerForm.style.display = "none";
+            wheelSection.style.display = "block";
         }
     }, { onlyOnce: true });
 });
 
-// --- Fonction pour tirer une catégorie aléatoire unique ---
-function getUniqueCategory(group, type) {
-    if (tiragesDispo[type].length === 0) {
-        tiragesDispo[type] = Object.keys(group);
-        currentRound++;
-    }
-
-    const randomIndex = Math.floor(Math.random() * tiragesDispo[type].length);
-    const chosenCategory = tiragesDispo[type][randomIndex];
-
-    tiragesDispo[type].splice(randomIndex, 1); // Retirer la catégorie tirée pour garantir unicité
-
-    return chosenCategory;
-}
-
-// --- Fonction pour afficher les résultats après le tirage ---
-function displayResult(isRiche, category, data) {
-    wheelSection.style.display = 'none';
-    resultSection.style.display = 'block';
-
-    resultTitle.textContent = isRiche ? 'Tu es Riche' : "Tu es Pauvre";
-    resultCategory.textContent = category;
-    resultAction.innerHTML = `Mission : ${data.action[0].replace(/\n/g, '<br>')}`; // Gérer les retours à la ligne
-}
-
-// --- Fonction pour tourner la roue ---
-spinBtn.addEventListener('click', () => {
-    if (isSpinning) return;
-
-    const playerName = sessionStorage.getItem('playerName');
+// Spin Wheel
+spinBtn.addEventListener("click", () => {
+    const playerName = sessionStorage.getItem("playerName");
     if (!playerName) return;
 
     const isRiche = Math.random() > 0.5;
-    const group = isRiche ? riche : pauvre;
-    const chosenCategory = getUniqueCategory(group, isRiche ? "riche" : "pauvre");
-    const chosenData = group[chosenCategory];
+    const type = isRiche ? "riche" : "pauvre";
 
-    const playerResult = {
-        player: playerName,
-        type: isRiche ? "riche" : "pauvre",
-        category: chosenCategory,
-        action: chosenData.action[0],
-        timestamp: new Date().toISOString()
-    };
+    if (tiragesDispo[type].length === 0) {
+        resetTirages(type);
+        if (tiragesDispo[type].length === 0) {
+            alert(`Toutes les catégories ${type} ont été tirées au maximum.`);
+            return;
+        }
+    }
 
-    // Sauvegarder les résultats
-    const resultKey = push(ref(database, `results`)).key;
-    set(ref(database, `results/${resultKey}`), playerResult);
+    const randomIndex = Math.floor(Math.random() * tiragesDispo[type].length);
+    const chosenCategory = tiragesDispo[type].splice(randomIndex, 1)[0];
+    const chosenData = (type === "riche" ? riche : pauvre)[chosenCategory];
 
-    // Animation
-    const rotationAmount = 3600 + Math.floor(Math.random() * 360);
-    wheel.style.transition = 'transform 4s';
-    wheel.style.transform = `rotate(${rotationAmount}deg)`;
-    isSpinning = true;
+    tirageCount[type][chosenCategory]++;
 
+    const rotation = Math.floor(Math.random() * 360) + 3600;
+
+    // Reset the wheel before starting the new spin
+    wheel.style.transition = "none";
+    wheel.style.transform = `rotate(0deg)`;
+
+    // Add a slight delay before applying the new rotation
     setTimeout(() => {
-        isSpinning = false;
-        wheel.style.transform = `rotate(${rotationAmount % 360}deg)`;
-        displayResult(isRiche, chosenCategory, chosenData);
-    }, 4000);
+        wheel.style.transition = "transform 4s ease-out";
+        wheel.style.transform = `rotate(${rotation}deg)`;
+
+        setTimeout(() => {
+            const resultKey = push(ref(database, "results")).key;
+            set(ref(database, `results/${resultKey}`), {
+                player: playerName,
+                type,
+                category: chosenCategory,
+                action: chosenData.action[0],
+                timestamp: new Date().toISOString(),
+            });
+
+            wheelSection.style.display = "none";
+            resultSection.style.display = "block";
+            resultTitle.textContent = isRiche ? "Tu es Riche" : "Tu es Pauvre";
+            resultCategory.textContent = chosenCategory;
+            resultAction.innerHTML = `Mission :<br>${chosenData.action[0].replace(/\n/g, "<br>")}`;
+        }, 4000); // Wait for the rotation to finish
+    }, 100); // Small delay to reset the rotation
 });
 
-// --- Interface admin : Afficher les résultats ---
-adminLink.addEventListener('click', (e) => {
+// Admin Access
+adminLink.addEventListener("click", (e) => {
     e.preventDefault();
-    adminInterface.style.display = 'block';
-    onValue(ref(database, 'results'), (snapshot) => {
-        resultsList.innerHTML = '';
-        snapshot.forEach((childSnapshot) => {
-            const result = childSnapshot.val();
-            const listItem = document.createElement('li');
-            listItem.textContent = `${result.player} - ${result.type} - ${result.category} (tiré le ${new Date(result.timestamp).toLocaleString()})`;
-            resultsList.appendChild(listItem);
+    adminForm.style.display = "block";
+});
+
+adminSubmitBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const password = adminPasswordInput.value.trim();
+    if (isPasswordCorrect(password)) {
+        adminForm.style.display = "none";
+        adminInterface.style.display = "block";
+
+        onValue(ref(database, "results"), (snapshot) => {
+            resultsList.innerHTML = "";
+            snapshot.forEach((childSnapshot) => {
+                const result = childSnapshot.val();
+                const li = document.createElement("li");
+                li.textContent = `${result.player} - ${result.type} - ${result.category} (${new Date(result.timestamp).toLocaleString()})`;
+                resultsList.appendChild(li);
+            });
         });
-    });
+    } else {
+        alert("Mot de passe incorrect.");
+    }
 });
 
-// --- Réinitialiser toutes les données ---
-resetAllBtn.addEventListener('click', () => {
-    remove(ref(database, 'players'));
-    remove(ref(database, 'results'));
-    alert('Toutes les données ont été réinitialisées.');
+// Reset All Results
+resetAllBtn.addEventListener("click", () => {
+    remove(ref(database, "players"));
+    remove(ref(database, "results"));
+    alert("Toutes les données ont été réinitialisées.");
+    resetTirages("riche");
+    resetTirages("pauvre");
 });
 
-// --- Revenir à l'accueil ---
-resetBtn.addEventListener('click', () => {
-    resultSection.style.display = 'none';
-    playerForm.style.display = 'block';
+// Reset a specific player
+resetPlayerBtn.addEventListener("click", () => {
+    const playerName = normalizeName(resetPlayerNameInput.value.trim());
+    if (!playerName) {
+        alert("Veuillez entrer le nom complet du joueur.");
+        return;
+    }
+
+    const playerRef = ref(database, `players/${playerName}`);
+    const resultsRef = ref(database, "results");
+
+    onValue(playerRef, (snapshot) => {
+        if (snapshot.exists()) {
+            remove(playerRef).then(() => {
+                onValue(resultsRef, (resultsSnapshot) => {
+                    resultsSnapshot.forEach((childSnapshot) => {
+                        const result = childSnapshot.val();
+                        if (result.player === playerName) {
+                            remove(ref(database, `results/${childSnapshot.key}`));
+                        }
+                    });
+                    alert(`Le joueur "${playerName}" a été réinitialisé.`);
+                    resetPlayerNameInput.value = "";
+                }, { onlyOnce: true });
+            });
+        } else {
+            alert(`Le joueur "${playerName}" n'existe pas.`);
+        }
+    }, { onlyOnce: true });
 });
+
+// Reset to Main
+resetBtn.addEventListener("click", () => {
+    resultSection.style.display = "none";
+    playerForm.style.display = "block";
+});
+
+// Initialize tirages on load
+resetTirages("riche");
+resetTirages("pauvre");

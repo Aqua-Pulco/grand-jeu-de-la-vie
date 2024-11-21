@@ -43,15 +43,36 @@
         <!-- Lien discret pour accéder à la section admin -->
         <a href="#" id="admin-link" style="font-size: small;">Admin</a>
 
+        <!-- Formulaire admin -->
+        <div id="admin-form" style="display: none;">
+            <h2>Connexion Administrateur</h2>
+            <form>
+                <div class="form-group">
+                    <label for="adminPassword">Mot de passe :</label>
+                    <input type="password" id="adminPassword" placeholder="Mot de passe" required>
+                </div>
+                <button id="admin-submit">Se connecter</button>
+            </form>
+        </div>
+
         <!-- Interface admin -->
         <div id="admin-interface" style="display: none;">
             <h2>Interface Administrateur</h2>
             <ul id="resultats-list"></ul>
             <button id="reset-all-btn">Réinitialiser tous les résultats</button>
+
+            <!-- Réinitialisation d'un joueur spécifique -->
+            <div id="reset-player-section" style="margin-top: 20px;">
+                <h3>Réinitialiser un joueur</h3>
+                <div class="form-group">
+                    <label for="resetPlayerName">Nom complet du joueur :</label>
+                    <input type="text" id="resetPlayerName" placeholder="Nom Prénom">
+                </div>
+                <button id="reset-player-btn">Réinitialiser ce joueur</button>
+            </div>
         </div>
     </div>
 
-    <script src="data.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 </html>
