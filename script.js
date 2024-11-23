@@ -1,8 +1,9 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 import { riche, pauvre } from "./data.js";
 
-// Firebase Configuration
+// --- Configuration Firebase ---
 const firebaseConfig = {
     apiKey: "AIzaSyDm6MO9b1ZVAK8k7kaacl9ABYS-9wmLoLA",
     authDomain: "grand-jeu-de-la-vie.firebaseapp.com",
@@ -13,11 +14,11 @@ const firebaseConfig = {
     databaseURL: "https://grand-jeu-de-la-vie-default-rtdb.europe-west1.firebasedatabase.app/"
 };
 
-// Initialize Firebase
+// --- Initialisation Firebase ---
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM Elements
+// --- Variables DOM ---
 const playerForm = document.getElementById("playerForm");
 const wheelSection = document.getElementById("wheel-section");
 const wheel = document.getElementById("wheel");
@@ -37,38 +38,49 @@ const resultsList = document.getElementById("resultats-list");
 const resetPlayerBtn = document.getElementById("reset-player-btn");
 const resetPlayerNameInput = document.getElementById("resetPlayerName");
 
-// Globals
+// --- Variables Globales ---
 let tiragesDispo = { riche: [], pauvre: [] };
 let tirageCount = { riche: {}, pauvre: {} };
-const ADMIN_PASSWORD = "Brandebourg49";
+let tourCount = 0;
+const ADMIN_HASHED_PASSWORD = "24f92d1e8d3adf7e9c22dbb4ad4d9ae4718ec97e541e7d07af01a019ac2a05b7"; // Hsh
 
-// Initialize tirageCount with maximum values
-Object.keys(riche).forEach(category => {
-    tirageCount.riche[category] = 0;
-});
-Object.keys(pauvre).forEach(category => {
-    tirageCount.pauvre[category] = 0;
-});
 
-// Reset tiragesDispo for a new cycle
-function resetTirages(type) {
-    tiragesDispo[type] = Object.keys(type === "riche" ? riche : pauvre).filter(category => {
-        return tirageCount[type][category] < (type === "riche" ? riche : pauvre)[category].tirage_max;
-    });
+// --- Initialisation des comptes ---
+Object.keys(riche).forEach(category => (tirageCount.riche[category] = 0));
+Object.keys(pauvre).forEach(category => (tirageCount.pauvre[category] = 0));
+
+// --- Vérification du mot de passe admin ---
+async function isPasswordCorrect(inputPassword) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(inputPassword);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashedInput = hashArray.map(byte => byte.toString(16).padStart(2, "0")).join("");
+    return hashedInput === "24f92d1e8d3adf7e9c22dbb4ad4d9ae4718ec97e541e7d07af01a019ac2a05b7";
 }
 
-// Verify Password
-function isPasswordCorrect(inputPassword) {
-    return inputPassword === ADMIN_PASSWORD;
-}
-
-// Normalize Names
+// --- Normalisation des noms ---
 function normalizeName(name) {
     return name.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
 }
 
-// Player Form Submission
-playerForm.addEventListener("submit", (e) => {
+// --- Réinitialisation des tirages disponibles ---
+function resetTirages() {
+    tiragesDispo.riche = Object.keys(riche).filter(category => tirageCount.riche[category] < riche[category].tirage_max);
+    tiragesDispo.pauvre = Object.keys(pauvre).filter(category => tirageCount.pauvre[category] < pauvre[category].tirage_max);
+
+    if (tiragesDispo.riche.length === 0 && tiragesDispo.pauvre.length === 0) {
+        console.log("Toutes les catégories ont été tirées. Réinitialisation...");
+        tourCount++;
+        Object.keys(riche).forEach(category => (tirageCount.riche[category] = 0));
+        Object.keys(pauvre).forEach(category => (tirageCount.pauvre[category] = 0));
+        tiragesDispo.riche = Object.keys(riche);
+        tiragesDispo.pauvre = Object.keys(pauvre);
+    }
+}
+
+// --- Soumission du formulaire joueur ---
+playerForm.addEventListener("submit", e => {
     e.preventDefault();
     const firstName = document.getElementById("playerFirstName").value.trim();
     const lastName = document.getElementById("playerLastName").value.trim();
@@ -79,12 +91,11 @@ playerForm.addEventListener("submit", (e) => {
 
     const playerFullName = normalizeName(`${firstName} ${lastName}`);
     const playerRef = ref(database, `players/${playerFullName}`);
-    onValue(playerRef, (snapshot) => {
+    onValue(playerRef, snapshot => {
         if (snapshot.exists()) {
-            alert("Vous avez déjà joué. Ainsi va la Vie ;)");
+            alert("Vous ne pouvez pas rejouer. Ainsi va la vie ;)");
         } else {
-            const timestamp = new Date().toISOString();
-            set(playerRef, { played: true, timestamp });
+            set(playerRef, { played: true, timestamp: new Date().toISOString() });
             sessionStorage.setItem("playerName", playerFullName);
             playerForm.style.display = "none";
             wheelSection.style.display = "block";
@@ -92,7 +103,7 @@ playerForm.addEventListener("submit", (e) => {
     }, { onlyOnce: true });
 });
 
-// Spin Wheel
+// --- Fonction pour lancer la roue ---
 spinBtn.addEventListener("click", () => {
     const playerName = sessionStorage.getItem("playerName");
     if (!playerName) return;
@@ -101,9 +112,9 @@ spinBtn.addEventListener("click", () => {
     const type = isRiche ? "riche" : "pauvre";
 
     if (tiragesDispo[type].length === 0) {
-        resetTirages(type);
+        resetTirages();
         if (tiragesDispo[type].length === 0) {
-            alert(`Toutes les catégories ${type} ont été tirées au maximum.`);
+            alert(`Toutes les catégories ${type} ont été tirées.`);
             return;
         }
     }
@@ -111,16 +122,12 @@ spinBtn.addEventListener("click", () => {
     const randomIndex = Math.floor(Math.random() * tiragesDispo[type].length);
     const chosenCategory = tiragesDispo[type].splice(randomIndex, 1)[0];
     const chosenData = (type === "riche" ? riche : pauvre)[chosenCategory];
-
     tirageCount[type][chosenCategory]++;
 
     const rotation = Math.floor(Math.random() * 360) + 3600;
-
-    // Reset the wheel before starting the new spin
     wheel.style.transition = "none";
     wheel.style.transform = `rotate(0deg)`;
 
-    // Add a slight delay before applying the new rotation
     setTimeout(() => {
         wheel.style.transition = "transform 4s ease-out";
         wheel.style.transform = `rotate(${rotation}deg)`;
@@ -140,26 +147,26 @@ spinBtn.addEventListener("click", () => {
             resultTitle.textContent = isRiche ? "Tu es Riche" : "Tu es Pauvre";
             resultCategory.textContent = chosenCategory;
             resultAction.innerHTML = `Mission :<br>${chosenData.action[0].replace(/\n/g, "<br>")}`;
-        }, 4000); // Wait for the rotation to finish
-    }, 100); // Small delay to reset the rotation
+        }, 4000);
+    }, 100);
 });
 
-// Admin Access
-adminLink.addEventListener("click", (e) => {
+// --- Connexion admin ---
+adminLink.addEventListener("click", e => {
     e.preventDefault();
     adminForm.style.display = "block";
 });
 
-adminSubmitBtn.addEventListener("click", (e) => {
+adminSubmitBtn.addEventListener("click", e => {
     e.preventDefault();
     const password = adminPasswordInput.value.trim();
     if (isPasswordCorrect(password)) {
         adminForm.style.display = "none";
         adminInterface.style.display = "block";
 
-        onValue(ref(database, "results"), (snapshot) => {
+        onValue(ref(database, "results"), snapshot => {
             resultsList.innerHTML = "";
-            snapshot.forEach((childSnapshot) => {
+            snapshot.forEach(childSnapshot => {
                 const result = childSnapshot.val();
                 const li = document.createElement("li");
                 li.textContent = `${result.player} - ${result.type} - ${result.category} (${new Date(result.timestamp).toLocaleString()})`;
@@ -171,52 +178,58 @@ adminSubmitBtn.addEventListener("click", (e) => {
     }
 });
 
-// Reset All Results
+// --- Réinitialisation ---
 resetAllBtn.addEventListener("click", () => {
     remove(ref(database, "players"));
     remove(ref(database, "results"));
     alert("Toutes les données ont été réinitialisées.");
-    resetTirages("riche");
-    resetTirages("pauvre");
+    resetTirages();
 });
 
-// Reset a specific player
-resetPlayerBtn.addEventListener("click", () => {
+resetPlayerBtn.addEventListener("click", async () => {
     const playerName = normalizeName(resetPlayerNameInput.value.trim());
     if (!playerName) {
-        alert("Veuillez entrer le nom complet du joueur.");
+        alert("Entrez le nom complet.");
         return;
     }
 
     const playerRef = ref(database, `players/${playerName}`);
     const resultsRef = ref(database, "results");
 
-    onValue(playerRef, (snapshot) => {
-        if (snapshot.exists()) {
-            remove(playerRef).then(() => {
-                onValue(resultsRef, (resultsSnapshot) => {
-                    resultsSnapshot.forEach((childSnapshot) => {
-                        const result = childSnapshot.val();
-                        if (result.player === playerName) {
-                            remove(ref(database, `results/${childSnapshot.key}`));
-                        }
-                    });
-                    alert(`Le joueur "${playerName}" a été réinitialisé.`);
-                    resetPlayerNameInput.value = "";
-                }, { onlyOnce: true });
-            });
-        } else {
-            alert(`Le joueur "${playerName}" n'existe pas.`);
+    try {
+        // Vérifie si le joueur existe
+        const playerSnapshot = await new Promise(resolve => onValue(playerRef, resolve, { onlyOnce: true }));
+
+        if (!playerSnapshot.exists()) {
+            alert(`Joueur "${playerName}" introuvable.`);
+            return;
         }
-    }, { onlyOnce: true });
+
+        // Supprime les données du joueur
+        await remove(playerRef);
+
+        // Supprime les résultats liés au joueur
+        const resultsSnapshot = await new Promise(resolve => onValue(resultsRef, resolve, { onlyOnce: true }));
+        resultsSnapshot.forEach(childSnapshot => {
+            const result = childSnapshot.val();
+            if (result.player === playerName) {
+                remove(ref(database, `results/${childSnapshot.key}`));
+            }
+        });
+
+        alert(`Joueur "${playerName}" réinitialisé avec succès.`);
+        resetPlayerNameInput.value = ""; // Réinitialise le champ de saisie
+    } catch (error) {
+        console.error("Erreur lors de la réinitialisation :", error);
+        alert("Une erreur est survenue lors de la réinitialisation.");
+    }
 });
 
-// Reset to Main
+// --- Réinitialisation vers l'accueil ---
 resetBtn.addEventListener("click", () => {
     resultSection.style.display = "none";
     playerForm.style.display = "block";
 });
 
-// Initialize tirages on load
-resetTirages("riche");
-resetTirages("pauvre");
+// --- Initialisation ---
+resetTirages();

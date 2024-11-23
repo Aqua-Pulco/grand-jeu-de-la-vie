@@ -1,18 +1,30 @@
 /* --- Corps de la page --- */
+/* --- Corps de la page --- */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: url('https://apod.cidehom.com/pix/2004/040707.jpg') no-repeat center center fixed; /* Image de fond */
-    background-size: cover; /* L'image couvre tout l'écran */
+    background: url('https://apod.cidehom.com/pix/2004/040707.jpg') no-repeat center center fixed;
+    background-size: cover; /* L'image couvre tout l'écran, sans déformation */
     color: #fff; /* Texte blanc pour contraste */
     text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 100vh; /* Hauteur minimale de l'écran */
+    height: 100%; /* Force la hauteur */
+    overflow-x: hidden; /* Empêche le débordement horizontal */
 }
+
+/* Ajout pour assurer que le conteneur parent du body occupe tout l'écran */
+html {
+    height: 100%; /* Assure que html occupe toute la hauteur */
+    overflow-x: hidden; /* Empêche les débordements horizontaux */
+    margin: 0;
+    padding: 0;
+}
+
 
 /* --- Conteneur principal --- */
 #main-container {
@@ -23,6 +35,7 @@ body {
     background-color: rgba(0, 0, 0, 0.8); /* Fond noir semi-transparent */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Effet d'ombre pour le conteneur */
     border-radius: 10px; /* Coins arrondis */
+    box-sizing: border-box; /* Inclut bordures et marges dans la largeur */
 }
 
 /* --- Titre principal --- */
@@ -211,6 +224,10 @@ button:hover {
 
 /* --- Mobile responsiveness --- */
 @media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden; /* Empêche les débordements horizontaux sur mobile */
+    }
+
     #main-container {
         width: 95%;
         padding: 10px;
