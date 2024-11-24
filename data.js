@@ -74,13 +74,6 @@ export const pauvre = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es marxiste léniniste": {
-        tirage_max: 1,
-        action: [
-            "Tente de prononcer 10 fois le nom de « Noam Chomsky » au cours d'une discussion."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es intermittent·e de Montreuil": {
         tirage_max: 1,
         action: [
