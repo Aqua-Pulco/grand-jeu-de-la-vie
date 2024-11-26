@@ -49,13 +49,6 @@ export const riche = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es gouroux de secte BIO-GA": {
-        tirage_max: 1,
-        action: [
-            "Trouve tes adeptes et obtiens d'eux un chèque à l'ordre de Gaïa la Terre inc."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es rappeur·euse de Neuilly-sur-Seine": {
         tirage_max: 2,
         action: [
