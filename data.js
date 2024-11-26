@@ -8,7 +8,7 @@ export const riche = {
         // image: "" // lien vers l'image
     },
     "En Grande-Bretagne, on l’appelle « la gauche champagne »,\nen Allemagne « la fraction Toscane »,\naux États-Unis « les libéraux Limousine » ou « le gauchisme de Park Avenue ».\nEn France, vous êtes la « gauche caviar ».": {
-        tirage_max: 1,
+        tirage_max: 2,
         action: [
             "Affronte un·e catho versaillais·e en shifu-Re-mix :\nwokiste > féminazie > islamo-gauchiste > wokiste.\nSi tu perds, tu devras passer 'Olympics' d'Arielle .D."
         ],
@@ -25,13 +25,6 @@ export const riche = {
         tirage_max: 2,
         action: [
             "Au choix :\n- Fais tourner une fake news dans toute la soirée\net/ou\n - Vends un produit de ta propre marque."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es Star du Showbizz": {
-        tirage_max: 2,
-        action: [
-            "Dédicace des photos de 'toi'."
         ],
         // image: "" // lien vers l'image
     },
