@@ -14,13 +14,6 @@ export const riche = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es politique ripoux": {
-        tirage_max: 2,
-        action: [
-            "Au cours de la soirée et à la même personne,\ndis une chose, puis (plus tard ou tout de suite), son contraire.\nRends également un petit service aux mafieux et aux encartés au MEDEF dans leur mission,\ntente de prendre la plus grosse part du gateau."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es influenceur·euse à Dubaï": {
         tirage_max: 2,
         action: [
@@ -35,15 +28,15 @@ export const riche = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es de droite": {
+    "tu es Catho Versaillais·e": {
         tirage_max: 2,
         action: [
-            "Trouve un·e 'Marxiste-Leniniste' dans la soirée, glisse lui :\n'C'est normal d'être de gauche quand on est jeune... Apres, on grandit.'\nTrouve un.e artiste-auter.ice, demande lui si il/elle ne voudrait pas trouver un vrai travail, plutot."
+            "Affronte quelqu'un·e de la gauche caviar \nen shifu-re-mix :\nwokiste > féminazie > islamo-gauchiste > wokiste etc.\nSi tu perds, tu devras passer 'Vois sur ton chemin'.\nndrl Les Choristes."
         ],
         // image: "" // lien vers l'image
     },
     "tu es rappeur·euse de Neuilly-sur-Seine": {
-        tirage_max: 2,
+        tirage_max: 1,
         action: [
             "Dis 'wesh' et 'frère' au moins 10 fois (de chaque) au cours d'une conversation."
         ],
@@ -60,45 +53,10 @@ export const pauvre = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es intermittent·e de Montreuil": {
-        tirage_max: 1,
-        action: [
-            "Hacke la soirée :\nCe soir en fait, c'est ton pot de départ car tu pars t'installer à Marseille."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es militant activiste": {
-        tirage_max: 2,
-        action: [
-            "Crée un collectif de ton choix avec un maximum de gens,\nsi tu atteins au moins 10 adhérents passe 'Planète Brûlée'."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es décroissant.e": {
         tirage_max: 2,
         action: [
             "N'amène rien à la soirée, tu peux également réutiliser un déguisement d'une soirée déguisée passée, quel que soit son thème"
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es altermondialiste": {
-        tirage_max: 1,
-        action: [
-            "arrange-toi pour faire signer une pétition\n(une de ton invention OU une vraie qui existe)\nsi tu as moins de 10 signatures, tu devras faire semblant\nde vouloir passer une chanson de Zaz, ou pire...\nLa passer."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es lanceur·euse d'alerte": {
-        tirage_max: 2,
-        action: [
-            "Découvre qui sont les exilés fiscaux de la soirée."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es docteur·e en thèse sur les cheveliers paysans de l'an mille au lac de Paladru": {
-        tirage_max: 1,
-        action: [
-            "Si quelqu'un te pose la quesion 'qu'est-ce que tu fais dans la vie ?', tente d'expliquer ton sujet de thèse."
         ],
         // image: "" // lien vers l'image
     },
@@ -120,13 +78,6 @@ export const pauvre = {
         tirage_max: 2,
         action: [
             "Ramène ton chéquier."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es artiste-auteur.ice": {
-        tirage_max: 1,
-        action: [
-            "Gagne 5 followers sur Insta."
         ],
         // image: "" // lien vers l'image
     }
