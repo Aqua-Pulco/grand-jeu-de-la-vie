@@ -28,13 +28,6 @@ export const riche = {
         ],
         // image: "" // lien vers l'image
     },
-    "tu es Star du Showbizz": {
-        tirage_max: 3,
-        action: [
-            "Dédicace des photos de 'toi'."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es exilé·e fiscal·e": {
         tirage_max: 1,
         action: [
@@ -67,20 +60,6 @@ export const riche = {
 
 // Définition des catégories pauvres
 export const pauvre = {
-    "tu es de toutes les manifs": {
-        tirage_max: 1,
-        action: [
-            "Trouve et allie-toi avec la·e syndicaliste pour récupérer ce que les patrons du MEDEF,\nles politiques ripoux et les mafieux ont volé dans la soirée."
-        ],
-        // image: "" // lien vers l'image
-    },
-    "tu es intermittent·e de Montreuil": {
-        tirage_max: 1,
-        action: [
-            "Hacke la soirée :\nCe soir en fait, c'est ton pot de départ car tu pars t'installer à Marseille."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es décroissant·e": {
         tirage_max: 5,
         action: [
@@ -89,28 +68,21 @@ export const pauvre = {
         // image: "" // lien vers l'image
     },
     "tu es altermondialiste": {
-        tirage_max: 1,
+        tirage_max: 2,
         action: [
             "arrange-toi pour faire signer une pétition\n(une de ton invention OU une vraie qui existe)\nsi tu as moins de 10 signatures, tu devras faire semblant\nde vouloir passer une chanson de Zaz, ou pire...\nLa passer."
         ],
         // image: "" // lien vers l'image
     },
-    "tu es docteur·e en thèse sur les cheveliers paysans de l'an mille au lac de Paladru": {
-        tirage_max: 1,
-        action: [
-            "Si quelqu'un te pose la question 'qu'est-ce que tu fais dans la vie ?', tente d'expliquer ton sujet de thèse."
-        ],
-        // image: "" // lien vers l'image
-    },
     "tu es Bartender, DJ, Performeur·euse, prof de yoga, tatoueur, astrologue-essayiste, naturopathe, equicoach, céramiste, tiktokeur·euse, sexologue et apiculteur.ice en milieu urbain.": {
-        tirage_max: 1,
+        tirage_max: 2,
         action: [
             "Demande à chaque personne de la soirée 'et toi, qu'est-ce que tu fais dans la vie ?'\net / ou\n si on te demande, enumère tous tes métiers."
         ],
         // image: "" // lien vers l'image
     },
     "tu es adepte d'une secte BYO-GA": {
-        tirage_max: 1,
+        tirage_max: 2,
         action: [
             "Ramène ton chéquier."
         ],
